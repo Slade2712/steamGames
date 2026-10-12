@@ -11,7 +11,7 @@ func Initialize(db *sql.DB) error {
 		CREATE TABLE IF NOT EXISTS games (
 			id INTEGER PRIMARY KEY,
 			title TEXT NOT NULL,
-			required_age INTEGER,
+			required_age VARCHAR(5),
 			is_free BOOLEAN,
 			description TEXT,
 			image TEXT,
