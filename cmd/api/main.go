@@ -22,11 +22,13 @@ func main() {
 		log.Fatal(initError)
 	}
 
+	prefix := os.Getenv("API_PREFIX")
+	log.Println(prefix)
 	router := http.NewServeMux()
 
 	// HANDLER //
 	// HEALTH
-	router.HandleFunc("GET /health", handler.Health)
+	router.HandleFunc("GET "+prefix+"health", handler.Health)
 
 	// SERVER
 	internalPort := os.Getenv("PORT")
