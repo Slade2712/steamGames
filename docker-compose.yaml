@@ -16,13 +16,13 @@ services:
 
         environment:
             PORT: 8080
-
-            DB_HOST: postgres
-            DB_PORT: 5432
+            API_PORT: ${API_PORT}
+            DB_HOST: ${DB_HOST}
+            DB_PORT: ${DB_PORT}
             DB_NAME: ${POSTGRES_DB}
             DB_USER: ${POSTGRES_USER}
             DB_PASSWORD: ${POSTGRES_PASSWORD}
-            DB_SSLMODE: disable
+            DB_SSLMODE: ${DB_SSLMODE}
 
         networks:
             - backend
@@ -39,6 +39,16 @@ services:
 
         volumes:
             - postgres_data:/var/lib/postgresql/data
+        networks:
+            - backend
+
+    adminer:
+        image: adminer:latest
+        container_name: go-adminer
+        restart: unless-stopped
+
+        ports:
+            - "8081:8080"
 
         networks:
             - backend
