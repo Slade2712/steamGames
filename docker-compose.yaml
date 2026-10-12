@@ -1,0 +1,51 @@
+services:
+    api:
+        image: golang:1.25-alpine
+        container_name: go-api
+        restart: unless-stopped
+
+        working_dir: /app
+
+        volumes:
+            - ./:/app
+
+        command: go run ./cmd/api
+
+        ports:
+            - "${API_PORT:-8080}:8080"
+
+        environment:
+            PORT: 8080
+
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_NAME: ${POSTGRES_DB}
+            DB_USER: ${POSTGRES_USER}
+            DB_PASSWORD: ${POSTGRES_PASSWORD}
+            DB_SSLMODE: disable
+
+        networks:
+            - backend
+
+    postgres:
+        image: postgres:17-alpine
+        container_name: go-postgres
+        restart: unless-stopped
+
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB}
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+        networks:
+            - backend
+
+volumes:
+    postgres_data:
+
+networks:
+    backend:
+        driver: bridge
