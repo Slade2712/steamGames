@@ -39,7 +39,7 @@ func (h *Handler) GetGames(
 				http.StatusBadRequest,
 				responseModel.GenericResponse{
 					Success: false,
-					Message: "invalid limit",
+					Message: gameErrors.ErrInvalidLimit.Error(),
 				},
 			)
 			return
@@ -61,7 +61,7 @@ func (h *Handler) GetGames(
 				http.StatusBadRequest,
 				responseModel.GenericResponse{
 					Success: false,
-					Message: "invalid skip",
+					Message: gameErrors.ErrInvalidSkip.Error(),
 				},
 			)
 			return
@@ -81,7 +81,7 @@ func (h *Handler) GetGames(
 				http.StatusBadRequest,
 				responseModel.GenericResponse{
 					Success: false,
-					Message: "invalid realease_year",
+					Message: gameErrors.ErrInvalidReleaseYear.Error(),
 				},
 			)
 			return
@@ -102,7 +102,7 @@ func (h *Handler) GetGames(
 			http.StatusBadRequest,
 			responseModel.GenericResponse{
 				Success: false,
-				Message: "invalid ordering",
+				Message: gameErrors.ErrInvalidOrdering.Error(),
 			},
 		)
 		return
