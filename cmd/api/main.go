@@ -6,6 +6,10 @@ import (
 	"os"
 	"steam_games/internal/database"
 	"steam_games/internal/handler"
+
+	gameHandler "steam_games/internal/handler/games"
+	gameRepository "steam_games/internal/repositories/games"
+	gameService "steam_games/internal/services/games"
 )
 
 func main() {
@@ -26,9 +30,26 @@ func main() {
 	log.Println(prefix)
 	router := http.NewServeMux()
 
-	// HANDLER //
+	// ======================
+	// REPOSITORIES
+	// ======================
+	gameRepo := gameRepository.New(db)
+
+	// ======================
+	// SERVICES
+	// ======================
+	gameServ := gameService.New(gameRepo)
+
+	// ======================
+	// HANDLERS
+	// ======================
+	gameHand := gameHandler.New(gameServ)
+
 	// HEALTH
 	router.HandleFunc("GET "+prefix+"health", handler.Health)
+
+	// GET GAME BY ID
+	router.HandleFunc("GET "+prefix+"games/{id}", gameHand.GetGameByID)
 
 	// SERVER
 	internalPort := os.Getenv("PORT")
