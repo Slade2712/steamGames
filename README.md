@@ -9,9 +9,9 @@ Ordre possible des étapes :
 X - Setup (Docker + BDD)
 X - Import des données Steam (et conversion si PostgreSQL)
 O - GET /health + format d’erreur + logs
-O - GET /games/:id puis GET /games
-O - Pagination et tri
-O - Recherche / filtres
+X - GET /games/:id puis GET /games
+X - Pagination et tri
+X - Recherche / filtres
 O - Users admin + POST /login + middleware JWT
 O - Routes d’écriture (POST, PUT, DELETE) + validation
 O - CORS, doc Swagger/OpenAI

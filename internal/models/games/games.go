@@ -3,7 +3,7 @@ package models
 type Game struct {
 	ID              int        `json:"_id"`
 	Title           string     `json:"title"`
-	RequiredAge     any        `json:"required_age"`
+	RequiredAge     string     `json:"required_age"`
 	IsFree          bool       `json:"is_free"`
 	Description     *string    `json:"description"`
 	Image           *string    `json:"image"`
@@ -28,4 +28,18 @@ type Category struct {
 type Genre struct {
 	ID          int    `json:"id"`
 	Description string `json:"description"`
+}
+
+type GamesLinks struct {
+	Self string  `json:"self"`
+	Next *string `json:"next,omitempty"`
+}
+
+type GamesResponse struct {
+	Items      []Game     `json:"items"`
+	Page       int        `json:"page"`
+	PageSize   int        `json:"pageSize"`
+	TotalItems int        `json:"totalItems"`
+	TotalPages int        `json:"totalPages"`
+	Links      GamesLinks `json:"_links"`
 }

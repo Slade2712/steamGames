@@ -17,6 +17,29 @@ func New(repository *gameRepository.Repository) *Service {
 	}
 }
 
+func (s *Service) GetGames(
+	context context.Context,
+	limit int,
+	skip int,
+	ordering string,
+	title string,
+	releaseYear int,
+	platform string,
+	genre string,
+) ([]models.Game, int, error) {
+
+	return s.repository.GetGames(
+		context,
+		limit,
+		skip,
+		ordering,
+		title,
+		releaseYear,
+		platform,
+		genre,
+	)
+}
+
 func (s *Service) GetGameByID(
 	context context.Context,
 	id int,

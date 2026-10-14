@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	gameErrors "steam_games/internal/errors/games"
 	models "steam_games/internal/models/games"
@@ -18,6 +20,283 @@ func New(db *sql.DB) *Repository {
 	return &Repository{
 		db: db,
 	}
+}
+
+func (r *Repository) GetGames(
+	context context.Context,
+	limit int,
+	skip int,
+	ordering string,
+	title string,
+	releaseYear int,
+	platform string,
+	genre string,
+) ([]models.Game, int, error) {
+
+	query := `
+		SELECT
+			g.id,
+			g.title,
+			g.required_age,
+			g.is_free,
+			g.description,
+			g.image,
+			g.website,
+			g.price,
+			g.metacritic_score,
+			g.recommendations,
+			g.release_date,
+			g.release_year
+		FROM games g
+		WHERE 1 = 1
+	`
+
+	args := []any{}
+	argNumber := 1
+
+	if title != "" {
+		query += fmt.Sprintf(
+			" AND g.title ILIKE $%d",
+			argNumber,
+		)
+
+		args = append(
+			args,
+			"%"+title+"%",
+		)
+
+		argNumber++
+	}
+
+	if releaseYear != 0 {
+		query += fmt.Sprintf(
+			" AND g.release_year = $%d",
+			argNumber,
+		)
+
+		args = append(
+			args,
+			releaseYear,
+		)
+
+		argNumber++
+	}
+
+	if platform != "" {
+		query += fmt.Sprintf(`
+			AND EXISTS (
+				SELECT 1
+				FROM game_platforms gp
+				INNER JOIN platforms p
+					ON p.id = gp.platform_id
+				WHERE gp.game_id = g.id
+				AND p.name = $%d
+			)
+		`, argNumber)
+
+		args = append(
+			args,
+			platform,
+		)
+
+		argNumber++
+	}
+
+	if genre != "" {
+		genreStrings := strings.Split(
+			genre,
+			",",
+		)
+
+		genreConditions := []string{}
+
+		for _, genreString := range genreStrings {
+			genreID, convertError := strconv.Atoi(
+				genreString,
+			)
+
+			if convertError != nil {
+				return nil, 0, fmt.Errorf(
+					"genre invalide : %s",
+					genreString,
+				)
+			}
+
+			genreConditions = append(
+				genreConditions,
+				fmt.Sprintf(
+					"gg.genre_id = $%d",
+					argNumber,
+				),
+			)
+
+			args = append(
+				args,
+				genreID,
+			)
+
+			argNumber++
+		}
+
+		query += `
+			AND EXISTS (
+				SELECT 1
+				FROM game_genres gg
+				WHERE gg.game_id = g.id
+				AND (
+					` + strings.Join(genreConditions, " OR ") + `
+				)
+			)
+		`
+	}
+
+	countQuery := `
+		SELECT COUNT(*)
+		FROM (
+			` + query + `
+		) AS filtered_games
+	`
+
+	if ordering == "-title" {
+		query += " ORDER BY g.title DESC"
+	} else {
+		query += " ORDER BY g.title ASC"
+	}
+
+	query += fmt.Sprintf(
+		" LIMIT $%d OFFSET $%d",
+		argNumber,
+		argNumber+1,
+	)
+
+	queryArgs := append(
+		[]any{},
+		args...,
+	)
+
+	queryArgs = append(
+		queryArgs,
+		limit,
+		skip,
+	)
+
+	var totalItems int
+
+	countError := r.db.QueryRowContext(
+		context,
+		countQuery,
+		args...,
+	).Scan(&totalItems)
+
+	if countError != nil {
+		return nil, 0, fmt.Errorf(
+			"erreur lors du comptage des jeux : %w",
+			countError,
+		)
+	}
+
+	rows, queryError := r.db.QueryContext(
+		context,
+		query,
+		queryArgs...,
+	)
+
+	if queryError != nil {
+		return nil, 0, fmt.Errorf(
+			"erreur lors de la récupération des jeux : %w",
+			queryError,
+		)
+	}
+
+	defer rows.Close()
+
+	games := []models.Game{}
+	for rows.Next() {
+		var game models.Game
+
+		scanError := rows.Scan(
+			&game.ID,
+			&game.Title,
+			&game.RequiredAge,
+			&game.IsFree,
+			&game.Description,
+			&game.Image,
+			&game.Website,
+			&game.Price,
+			&game.MetacriticScore,
+			&game.Recommendations,
+			&game.ReleaseDate,
+			&game.ReleaseYear,
+		)
+
+		if scanError != nil {
+			return nil, 0, fmt.Errorf(
+				"erreur lors du scan d'un jeu : %w",
+				scanError,
+			)
+		}
+
+		developers, developersError := r.getDevelopers(
+			context,
+			game.ID,
+		)
+
+		if developersError != nil {
+			return nil, 0, developersError
+		}
+		game.Developers = developers
+
+		publishers, publishersError := r.getPublishers(
+			context,
+			game.ID,
+		)
+
+		if publishersError != nil {
+			return nil, 0, publishersError
+		}
+		game.Publishers = publishers
+
+		platforms, platformsError := r.getPlatforms(
+			context,
+			game.ID,
+		)
+
+		if platformsError != nil {
+			return nil, 0, platformsError
+		}
+		game.Platforms = platforms
+
+		categories, categoriesError := r.getCategories(
+			context,
+			game.ID,
+		)
+
+		if categoriesError != nil {
+			return nil, 0, categoriesError
+		}
+		game.Categories = categories
+
+		genres, genresError := r.getGenres(
+			context,
+			game.ID,
+		)
+
+		if genresError != nil {
+			return nil, 0, genresError
+		}
+		game.Genres = genres
+
+		games = append(
+			games,
+			game,
+		)
+	}
+
+	if rowsError := rows.Err(); rowsError != nil {
+		return nil, 0, rowsError
+	}
+
+	return games, totalItems, nil
 }
 
 func (r *Repository) GetGameByID(

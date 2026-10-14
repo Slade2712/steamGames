@@ -49,6 +49,9 @@ func main() {
 	// HEALTH
 	router.HandleFunc("GET "+prefix+"health", handler.Health)
 
+	// GET GAMES
+	router.HandleFunc("GET "+prefix+"games", gameHand.GetGames)
+
 	// GET GAME BY ID
 	router.HandleFunc("GET "+prefix+"games/{id}", gameHand.GetGameByID)
 
