@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-	"steam_games/utils"
+	"steam_games/internal/utils"
 )
 
 type HealthCheck struct {

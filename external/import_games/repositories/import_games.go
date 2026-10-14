@@ -1,4 +1,4 @@
-package import_games
+package repositories
 
 import (
 	"context"

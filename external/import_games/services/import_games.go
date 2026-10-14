@@ -1,4 +1,4 @@
-package import_games
+package services
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"os"
 
 	"steam_games/internal/models"
-	repository "steam_games/internal/repositories/import_games"
+	repository "steam_games/external/import_games/repositories"
 )
 
 type Service struct {
-	repository *repository.Repository
+    repository *repository.Repository
 }
 
 func New(repository *repository.Repository) *Service {

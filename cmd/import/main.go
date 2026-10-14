@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"steam_games/internal/database"
-	repository "steam_games/internal/repositories/import_games"
-	service "steam_games/internal/services/import_games"
+	repository "steam_games/external/import_games/repositories"
+	service "steam_games/external/import_games/services"
 )
 
 func main() {
