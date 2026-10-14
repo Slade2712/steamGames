@@ -8,6 +8,8 @@ import (
 	"steam_games/internal/database"
 	repository "steam_games/external/import_games/repositories"
 	service "steam_games/external/import_games/services"
+	logs "steam_games/internal/middleware/logs"
+	middlewareLogs "steam_games/internal/middleware/logs"
 )
 
 func main() {

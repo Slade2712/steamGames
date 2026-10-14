@@ -10,6 +10,7 @@ import (
 	gameHandler "steam_games/internal/handler/games"
 	gameRepository "steam_games/internal/repositories/games"
 	gameService "steam_games/internal/services/games"
+	middlewareLogs "steam_games/internal/middleware/logs"
 )
 
 func main() {
@@ -57,7 +58,7 @@ func main() {
 
 	log.Printf("API démarrée sur http://localhost:%s", externalPort)
 
-	serveError := http.ListenAndServe(":"+internalPort, router)
+	serveError := http.ListenAndServe(":"+internalPort, middlewareLogs.Logger(router))
 	if serveError != nil {
 		log.Fatal(serveError)
 	}

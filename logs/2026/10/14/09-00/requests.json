@@ -1,0 +1,74 @@
+[
+    {
+        "timestamp": "2026-10-14T09:04:04Z",
+        "duration_ms": 0,
+        "request": {
+            "method": "GET",
+            "path": "/api/v1/health",
+            "ip": "172.19.0.1:48362"
+        },
+        "response": {
+            "status": 200
+        }
+    },
+    {
+        "timestamp": "2026-10-14T09:04:05Z",
+        "duration_ms": 0,
+        "request": {
+            "method": "GET",
+            "path": "/api/v1/health",
+            "ip": "172.19.0.1:48364"
+        },
+        "response": {
+            "status": 200
+        }
+    },
+    {
+        "timestamp": "2026-10-14T09:04:08Z",
+        "duration_ms": 0,
+        "request": {
+            "method": "GET",
+            "path": "/api/v1/health",
+            "ip": "172.19.0.1:48378"
+        },
+        "response": {
+            "status": 200
+        }
+    },
+    {
+        "timestamp": "2026-10-14T09:04:10Z",
+        "duration_ms": 0,
+        "request": {
+            "method": "GET",
+            "path": "/api/v1/healthzddzefffefzfz",
+            "ip": "172.19.0.1:48392"
+        },
+        "response": {
+            "status": 404
+        }
+    },
+    {
+        "timestamp": "2026-10-14T09:04:15Z",
+        "duration_ms": 0,
+        "request": {
+            "method": "GET",
+            "path": "//healthzddzefffefzfz",
+            "ip": "172.19.0.1:47974"
+        },
+        "response": {
+            "status": 301
+        }
+    },
+    {
+        "timestamp": "2026-10-14T09:04:21Z",
+        "duration_ms": 0,
+        "request": {
+            "method": "GET",
+            "path": "/healthzddzefffefzfz",
+            "ip": "172.19.0.1:47990"
+        },
+        "response": {
+            "status": 404
+        }
+    }
+]
