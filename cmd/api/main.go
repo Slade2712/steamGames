@@ -16,13 +16,10 @@ import (
 	authMiddleware "steam_games/internal/middleware/auth"
 	gameRepository "steam_games/internal/repositories/games"
 	gameService "steam_games/internal/services/games"
-
 	middlewareCors "steam_games/internal/middleware/cors"
 	middlewareLogs "steam_games/internal/middleware/logs"
-	gameRepository "steam_games/internal/repositories/games"
 	userRepository "steam_games/internal/repositories/users"
 	authService "steam_games/internal/services/auth"
-	gameService "steam_games/internal/services/games"
 )
 
 // @title Steam Games API
