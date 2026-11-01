@@ -21,8 +21,30 @@ func New(service *gameService.Service) *Handler {
 	}
 }
 
-func (h *Handler) GetGames(
-	response http.ResponseWriter,
+// GetGames récupère une liste paginée de jeux.
+//
+// @Summary Lister les jeux
+// @Description Retourne une liste paginée de jeux Steam.
+// @Description Les résultats peuvent être filtrés par titre, année de sortie, plateforme et genre.
+// @Description Le tri est effectué sur le titre du jeu.
+// @Description Si limit est supérieur à 100, sa valeur est automatiquement limitée à 100.
+// @ID get-games
+// @Tags Games
+// @Produce json
+//
+// @Param limit query int false "Nombre maximum de jeux retournés" default(10) example(10)
+// @Param skip query int false "Nombre de jeux à ignorer avant de commencer la liste" default(0) example(0)
+// @Param ordering query string false "Ordre de tri par titre" Enums(title,-title) default(title) example(title)
+// @Param title query string false "Recherche partielle dans le titre du jeu, insensible à la casse" example(Subnautica)
+// @Param release_year query int false "Filtrer les jeux par année de sortie" example(2013)
+// @Param platforms query string false "Filtrer les jeux par nom de plateforme" example(linux)
+// @Param genre query string false "Filtrer par un ou plusieurs IDs de genres séparés par des virgules" example(2,25)
+//
+// @Success 200 {object} models.GamesResponse "Liste des jeux récupérée avec succès"
+// @Failure 400 {object} responses.GenericResponse "Paramètre de requête invalide"
+// @Failure 500 {object} responses.GenericResponse "Erreur interne lors de la récupération des jeux"
+// @Router /games [get]
+func (h *Handler) GetGames(response http.ResponseWriter,
 	request *http.Request,
 ) {
 	params := request.URL.Query()
@@ -163,6 +185,22 @@ func (h *Handler) GetGames(
 	)
 }
 
+// GetGameByID récupère un jeu à partir de son identifiant Steam.
+//
+// @Summary Récupérer un jeu par son ID
+// @Description Retourne toutes les informations disponibles pour un jeu Steam.
+// @Description La réponse contient notamment les développeurs, éditeurs, plateformes, catégories et genres associés au jeu.
+// @ID get-game-by-id
+// @Tags Games
+// @Produce json
+//
+// @Param id path int true "Identifiant Steam du jeu" example(570)
+//
+// @Success 200 {object} models.Game "Jeu récupéré avec succès"
+// @Failure 400 {object} responses.GenericResponse "L'identifiant fourni n'est pas un entier valide"
+// @Failure 404 {object} responses.GenericResponse "Aucun jeu correspondant à cet ID"
+// @Failure 500 {object} responses.GenericResponse "Erreur interne lors de la récupération du jeu"
+// @Router /games/{id} [get]
 func (h *Handler) GetGameByID(
 	response http.ResponseWriter,
 	request *http.Request,

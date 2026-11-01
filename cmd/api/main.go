@@ -7,12 +7,26 @@ import (
 	"steam_games/internal/database"
 	"steam_games/internal/handler"
 
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+
+	_ "steam_games/docs"
+
 	gameHandler "steam_games/internal/handler/games"
+	middlewareLogs "steam_games/internal/middleware/logs"
 	gameRepository "steam_games/internal/repositories/games"
 	gameService "steam_games/internal/services/games"
-	middlewareLogs "steam_games/internal/middleware/logs"
 )
 
+// @title Steam Games API
+// @version 1.0
+// @description API REST pour consulter les jeux Steam.
+// @BasePath /api/v1
+
+// @tag.name Health
+// @tag.description Vérification de l'état de santé de l'API.
+
+// @tag.name Games
+// @tag.description Consultation, recherche, filtrage et pagination des jeux Steam.
 func main() {
 
 	// DB
@@ -45,9 +59,27 @@ func main() {
 	// HANDLERS
 	// ======================
 	gameHand := gameHandler.New(gameServ)
+	healthHand := handler.NewHealthHandler(db)
 
 	// HEALTH
-	router.HandleFunc("GET "+prefix+"health", handler.Health)
+	router.HandleFunc("GET "+prefix+"health", healthHand.Health)
+
+	// SWAGGER
+	router.HandleFunc("GET /swagger", func(response http.ResponseWriter, request *http.Request) {
+		http.Redirect(response, request, "/swagger/index.html", http.StatusMovedPermanently)
+	})
+	router.Handle(
+		"GET /swagger/",
+		httpSwagger.Handler(
+			httpSwagger.UIConfig(map[string]string{
+				"tagsSorter": `(a, b) => {
+				if (a === "Health") return -1;
+				if (b === "Health") return 1;
+				return a.localeCompare(b);
+			}`,
+			}),
+		),
+	)
 
 	// GET GAMES
 	router.HandleFunc("GET "+prefix+"games", gameHand.GetGames)

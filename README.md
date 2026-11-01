@@ -8,7 +8,7 @@ Ordre possible des étapes :
 
 X - Setup (Docker + BDD)
 X - Import des données Steam (et conversion si PostgreSQL)
-O - GET /health + format d’erreur + logs
+X - GET /health + format d’erreur + logs
 X - GET /games/:id puis GET /games
 X - Pagination et tri
 X - Recherche / filtres
