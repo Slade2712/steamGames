@@ -81,6 +81,12 @@ func main() {
 	// ======================
 	gameHand := gameHandler.New(gameServ)
 	userHand := userHandler.New(authServ)
+
+	// ======================
+	// MIDDLEWARES
+	// ======================
+	corsHandler := middlewareCors.Middleware(router)
+	loggedHandler := middlewareLogs.Logger(corsHandler)
 	authGuard := authMiddleware.New(authServ)
 
 	// AUTHENTIFICATION
@@ -115,12 +121,6 @@ func main() {
 
 	// GET GAME BY ID
 	router.HandleFunc("GET "+prefix+"games/{id}", gameHand.GetGameByID)
-
-	// ======================
-	// MIDDLEWARES
-	// ======================
-	corsHandler := middlewareCors.Middleware(router)
-	loggedHandler := middlewareLogs.Logger(corsHandler)
 
 	// ======================
 	// SERVER
