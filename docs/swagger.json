@@ -203,6 +203,68 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crée un nouveau jeu Steam.\nL'identifiant _id ne doit pas être fourni : il est généré automatiquement.\nLe champ title est obligatoire.\nUn seul objet JSON est accepté dans le corps de la requête.\nCette route est réservée aux administrateurs.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Games"
+                ],
+                "summary": "Créer un jeu",
+                "operationId": "create-game",
+                "parameters": [
+                    {
+                        "description": "Informations du jeu à créer",
+                        "name": "game",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Game"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Jeu créé avec succès",
+                        "schema": {
+                            "$ref": "#/definitions/models.Game"
+                        }
+                    },
+                    "400": {
+                        "description": "JSON invalide, plusieurs objets fournis, title manquant ou _id fourni",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token Bearer manquant, invalide ou expiré",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Accès réservé aux administrateurs",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne lors de la création du jeu",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    }
+                }
             }
         },
         "/games/{id}": {
@@ -247,6 +309,143 @@
                     },
                     "500": {
                         "description": "Erreur interne lors de la récupération du jeu",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remplace les informations d'un jeu existant à partir de son identifiant.\nLe champ title est obligatoire.\nSi _id est fourni dans le corps, il doit être identique à l'identifiant présent dans l'URL.\nLes associations développeurs, éditeurs, plateformes, catégories et genres sont remplacées par celles fournies.\nUn seul objet JSON est accepté dans le corps de la requête.\nCette route est réservée aux administrateurs.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Games"
+                ],
+                "summary": "Modifier un jeu",
+                "operationId": "update-game",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 570,
+                        "description": "Identifiant du jeu",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Nouvelles informations du jeu",
+                        "name": "game",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Game"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Jeu modifié avec succès",
+                        "schema": {
+                            "$ref": "#/definitions/models.Game"
+                        }
+                    },
+                    "400": {
+                        "description": "ID invalide, JSON invalide, plusieurs objets fournis, title manquant ou ID du corps différent de l'URL",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token Bearer manquant, invalide ou expiré",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Accès réservé aux administrateurs",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Jeu introuvable",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne lors de la modification du jeu",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Supprime définitivement un jeu à partir de son identifiant.\nLes associations du jeu avec ses développeurs, éditeurs, plateformes, catégories et genres sont également supprimées.\nCette route est réservée aux administrateurs.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Games"
+                ],
+                "summary": "Supprimer un jeu",
+                "operationId": "delete-game",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 570,
+                        "description": "Identifiant du jeu à supprimer",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Jeu supprimé avec succès"
+                    },
+                    "400": {
+                        "description": "Identifiant du jeu invalide",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token Bearer manquant, invalide ou expiré",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Accès réservé aux administrateurs",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Jeu introuvable",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne lors de la suppression du jeu",
                         "schema": {
                             "$ref": "#/definitions/responses.GenericResponse"
                         }

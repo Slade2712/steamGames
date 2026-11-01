@@ -9,6 +9,26 @@ import (
 	"strconv"
 )
 
+// DeleteGame supprime un jeu.
+//
+// @Summary Supprimer un jeu
+// @Description Supprime définitivement un jeu à partir de son identifiant.
+// @Description Les associations du jeu avec ses développeurs, éditeurs, plateformes, catégories et genres sont également supprimées.
+// @Description Cette route est réservée aux administrateurs.
+// @ID delete-game
+// @Tags Games
+// @Produce json
+// @Security BearerAuth
+//
+// @Param id path int true "Identifiant du jeu à supprimer" example(570)
+//
+// @Success 204 "Jeu supprimé avec succès"
+// @Failure 400 {object} responses.GenericResponse "Identifiant du jeu invalide"
+// @Failure 401 {object} responses.GenericResponse "Token Bearer manquant, invalide ou expiré"
+// @Failure 403 {object} responses.GenericResponse "Accès réservé aux administrateurs"
+// @Failure 404 {object} responses.GenericResponse "Jeu introuvable"
+// @Failure 500 {object} responses.GenericResponse "Erreur interne lors de la suppression du jeu"
+// @Router /games/{id} [delete]
 func (h *Handler) DeleteGame(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil || id <= 0 {
