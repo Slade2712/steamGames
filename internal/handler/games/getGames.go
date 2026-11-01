@@ -1,8 +1,10 @@
 package games
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	gameErrors "steam_games/internal/errors/games"
 	models "steam_games/internal/models/games"
@@ -21,8 +23,30 @@ func New(service *gameService.Service) *Handler {
 	}
 }
 
-func (h *Handler) GetGames(
-	response http.ResponseWriter,
+// GetGames récupère une liste paginée de jeux.
+//
+// @Summary Lister les jeux
+// @Description Retourne une liste paginée de jeux Steam.
+// @Description Les résultats peuvent être filtrés par titre, année de sortie, plateforme et genre.
+// @Description Le tri est effectué sur le titre du jeu.
+// @Description Si limit est supérieur à 100, sa valeur est automatiquement limitée à 100.
+// @ID get-games
+// @Tags Games
+// @Produce json
+//
+// @Param limit query int false "Nombre maximum de jeux retournés" default(10) example(10)
+// @Param skip query int false "Nombre de jeux à ignorer avant de commencer la liste" default(0) example(0)
+// @Param ordering query string false "Ordre de tri par titre" Enums(title,-title) default(title) example(title)
+// @Param title query string false "Recherche partielle dans le titre du jeu, insensible à la casse" example(Subnautica)
+// @Param release_year query int false "Filtrer les jeux par année de sortie" example(2013)
+// @Param platforms query string false "Filtrer les jeux par nom de plateforme" example(linux)
+// @Param genre query string false "Filtrer par un ou plusieurs IDs de genres séparés par des virgules" example(2,25)
+//
+// @Success 200 {object} models.GamesResponse "Liste des jeux récupérée avec succès"
+// @Failure 400 {object} responses.GenericResponse "Paramètre de requête invalide"
+// @Failure 500 {object} responses.GenericResponse "Erreur interne lors de la récupération des jeux"
+// @Router /games [get]
+func (h *Handler) GetGames(response http.ResponseWriter,
 	request *http.Request,
 ) {
 	params := request.URL.Query()
@@ -32,8 +56,8 @@ func (h *Handler) GetGames(
 	releaseYear := 0
 
 	if params.Get("limit") != "" {
-		value, error := strconv.Atoi(params.Get("limit"))
-		if error != nil {
+		value, convertError := strconv.Atoi(params.Get("limit"))
+		if convertError != nil || value <= 0 {
 			utils.SendJSONResponse(
 				response,
 				http.StatusBadRequest,
@@ -53,9 +77,8 @@ func (h *Handler) GetGames(
 	}
 
 	if params.Get("skip") != "" {
-		value, error := strconv.Atoi(params.Get("skip"))
-
-		if error != nil {
+		value, convertError := strconv.Atoi(params.Get("skip"))
+		if convertError != nil || value < 0 {
 			utils.SendJSONResponse(
 				response,
 				http.StatusBadRequest,
@@ -71,11 +94,8 @@ func (h *Handler) GetGames(
 	}
 
 	if params.Get("release_year") != "" {
-		value, error := strconv.Atoi(
-			params.Get("release_year"),
-		)
-
-		if error != nil {
+		value, convertError := strconv.Atoi(params.Get("release_year"))
+		if convertError != nil || value <= 0 {
 			utils.SendJSONResponse(
 				response,
 				http.StatusBadRequest,
@@ -108,6 +128,25 @@ func (h *Handler) GetGames(
 		return
 	}
 
+	genre := params.Get("genre")
+	if genre != "" {
+		genreValues := strings.Split(genre, ",")
+		for _, genreValue := range genreValues {
+			genreID, convertError := strconv.Atoi(genreValue)
+			if convertError != nil || genreID <= 0 {
+				utils.SendJSONResponse(
+					response,
+					http.StatusBadRequest,
+					responseModel.GenericResponse{
+						Success: false,
+						Message: gameErrors.ErrInvalidGenre.Error(),
+					},
+				)
+				return
+			}
+		}
+	}
+
 	games, totalItems, getError := h.service.GetGames(
 		request.Context(),
 		limit,
@@ -116,7 +155,7 @@ func (h *Handler) GetGames(
 		params.Get("title"),
 		releaseYear,
 		params.Get("platforms"),
-		params.Get("genre"),
+		genre,
 	)
 
 	if getError != nil {
@@ -125,7 +164,7 @@ func (h *Handler) GetGames(
 			http.StatusInternalServerError,
 			responseModel.GenericResponse{
 				Success: false,
-				Message: getError.Error(),
+				Message: "Internal server error",
 			},
 		)
 		return
@@ -163,6 +202,22 @@ func (h *Handler) GetGames(
 	)
 }
 
+// GetGameByID récupère un jeu à partir de son identifiant Steam.
+//
+// @Summary Récupérer un jeu par son ID
+// @Description Retourne toutes les informations disponibles pour un jeu Steam.
+// @Description La réponse contient notamment les développeurs, éditeurs, plateformes, catégories et genres associés au jeu.
+// @ID get-game-by-id
+// @Tags Games
+// @Produce json
+//
+// @Param id path int true "Identifiant Steam du jeu" example(570)
+//
+// @Success 200 {object} models.Game "Jeu récupéré avec succès"
+// @Failure 400 {object} responses.GenericResponse "L'identifiant fourni n'est pas un entier valide"
+// @Failure 404 {object} responses.GenericResponse "Aucun jeu correspondant à cet ID"
+// @Failure 500 {object} responses.GenericResponse "Erreur interne lors de la récupération du jeu"
+// @Router /games/{id} [get]
 func (h *Handler) GetGameByID(
 	response http.ResponseWriter,
 	request *http.Request,
@@ -170,11 +225,10 @@ func (h *Handler) GetGameByID(
 	idString := request.PathValue("id")
 	id, convertError := strconv.Atoi(idString)
 
-	if convertError != nil {
+	if convertError != nil || id <= 0 {
 		utils.SendJSONResponse(
 			response,
 			http.StatusBadRequest,
-
 			responseModel.GenericResponse{
 				Success: false,
 				Message: gameErrors.ErrInvalidGameID.Error(),
@@ -183,18 +237,38 @@ func (h *Handler) GetGameByID(
 		return
 	}
 
-	game, getError := h.service.GetGameByID(
-		request.Context(),
-		id,
-	)
-
+	game, getError := h.service.GetGameByID(request.Context(), id)
 	if getError != nil {
+		if errors.Is(getError, gameErrors.ErrGameNotFound) {
+			utils.SendJSONResponse(
+				response,
+				http.StatusNotFound,
+				responseModel.GenericResponse{
+					Success: false,
+					Message: gameErrors.ErrGameNotFound.Error(),
+				},
+			)
+			return
+		}
+
+		if errors.Is(getError, gameErrors.ErrInvalidGameID) {
+			utils.SendJSONResponse(
+				response,
+				http.StatusBadRequest,
+				responseModel.GenericResponse{
+					Success: false,
+					Message: gameErrors.ErrInvalidGameID.Error(),
+				},
+			)
+			return
+		}
+
 		utils.SendJSONResponse(
 			response,
 			http.StatusInternalServerError,
 			responseModel.GenericResponse{
 				Success: false,
-				Message: getError.Error(),
+				Message: "Internal server error",
 			},
 		)
 		return

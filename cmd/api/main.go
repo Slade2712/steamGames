@@ -7,9 +7,17 @@ import (
 	"steam_games/internal/database"
 	"steam_games/internal/handler"
 
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+
+	_ "steam_games/docs"
+
 	gameHandler "steam_games/internal/handler/games"
 	userHandler "steam_games/internal/handler/users"
 	authMiddleware "steam_games/internal/middleware/auth"
+	gameRepository "steam_games/internal/repositories/games"
+	gameService "steam_games/internal/services/games"
+
+	middlewareCors "steam_games/internal/middleware/cors"
 	middlewareLogs "steam_games/internal/middleware/logs"
 	gameRepository "steam_games/internal/repositories/games"
 	userRepository "steam_games/internal/repositories/users"
@@ -17,6 +25,16 @@ import (
 	gameService "steam_games/internal/services/games"
 )
 
+// @title Steam Games API
+// @version 1.0
+// @description API REST pour consulter les jeux Steam.
+// @BasePath /api/v1
+
+// @tag.name Health
+// @tag.description Vérification de l'état de santé de l'API.
+
+// @tag.name Games
+// @tag.description Consultation, recherche, filtrage et pagination des jeux Steam.
 func main() {
 
 	// DB
@@ -63,9 +81,27 @@ func main() {
 	router.HandleFunc("POST "+prefix+"login", userHand.Login)
 	router.HandleFunc("GET "+prefix+"users/me", authGuard.RequireLogin(userHand.Me))
 	router.HandleFunc("GET "+prefix+"users", authGuard.RequireAdmin(userHand.GetAll))
+	healthHand := handler.NewHealthHandler(db)
 
 	// HEALTH
-	router.HandleFunc("GET "+prefix+"health", handler.Health)
+	router.HandleFunc("GET "+prefix+"health", healthHand.Health)
+
+	// SWAGGER
+	router.HandleFunc("GET /swagger", func(response http.ResponseWriter, request *http.Request) {
+		http.Redirect(response, request, "/swagger/index.html", http.StatusMovedPermanently)
+	})
+	router.Handle(
+		"GET /swagger/",
+		httpSwagger.Handler(
+			httpSwagger.UIConfig(map[string]string{
+				"tagsSorter": `(a, b) => {
+				if (a === "Health") return -1;
+				if (b === "Health") return 1;
+				return a.localeCompare(b);
+			}`,
+			}),
+		),
+	)
 
 	// GET GAMES
 	router.HandleFunc("GET "+prefix+"games", gameHand.GetGames)
@@ -73,13 +109,21 @@ func main() {
 	// GET GAME BY ID
 	router.HandleFunc("GET "+prefix+"games/{id}", gameHand.GetGameByID)
 
+	// ======================
+	// MIDDLEWARES
+	// ======================
+	corsHandler := middlewareCors.Middleware(router)
+	loggedHandler := middlewareLogs.Logger(corsHandler)
+
+	// ======================
 	// SERVER
+	// ======================
 	internalPort := os.Getenv("PORT")
 	externalPort := os.Getenv("API_PORT")
 
 	log.Printf("API démarrée sur http://localhost:%s", externalPort)
 
-	serveError := http.ListenAndServe(":"+internalPort, middlewareLogs.Logger(router))
+	serveError := http.ListenAndServe(":"+internalPort, loggedHandler)
 	if serveError != nil {
 		log.Fatal(serveError)
 	}

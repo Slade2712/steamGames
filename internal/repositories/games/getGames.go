@@ -111,16 +111,7 @@ func (r *Repository) GetGames(
 		genreConditions := []string{}
 
 		for _, genreString := range genreStrings {
-			genreID, convertError := strconv.Atoi(
-				genreString,
-			)
-
-			if convertError != nil {
-				return nil, 0, fmt.Errorf(
-					"genre invalide : %s",
-					genreString,
-				)
-			}
+			genreID, _ := strconv.Atoi(genreString)
 
 			genreConditions = append(
 				genreConditions,
@@ -139,15 +130,15 @@ func (r *Repository) GetGames(
 		}
 
 		query += `
-			AND EXISTS (
-				SELECT 1
-				FROM game_genres gg
-				WHERE gg.game_id = g.id
-				AND (
-					` + strings.Join(genreConditions, " OR ") + `
-				)
+		AND EXISTS (
+			SELECT 1
+			FROM game_genres gg
+			WHERE gg.game_id = g.id
+			AND (
+				` + strings.Join(genreConditions, " OR ") + `
 			)
-		`
+		)
+	`
 	}
 
 	countQuery := `
