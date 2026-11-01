@@ -1,0 +1,65 @@
+info:
+  name: PUT Game
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/games/{{gameId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: Bearer {{token}}
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Snaptrack",
+        "required_age": "12",
+        "is_free": false,
+        "description": "Jeu de voiture fun entre amis",
+        "price": 999.99,
+        "developers": [
+          "SnapInc"
+        ],
+        "publishers": [
+          "SnapInc"
+        ],
+        "platforms": [
+          "Windows",
+          "Linux"
+        ],
+        "genres": [
+          {
+            "id":9,
+            "description":"Racing"
+          },
+          {
+            "id":28,
+            "description":"Simulation"
+          },
+          {
+            "id":1,
+            "description":"Action"
+          }
+        ],
+        "categories": [
+          {
+            "id":1,
+            "description":"Multi-player"
+          },
+          {
+            "id":47,
+            "description":"LAN PvP"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

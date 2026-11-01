@@ -10,4 +10,5 @@ var (
 	ErrInvalidReleaseYear = errors.New("invalid release_year")
 	ErrInvalidOrdering    = errors.New("invalid ordering")
 	ErrInvalidGenre       = errors.New("invalid genre")
+	ErrInvalidGameData = errors.New("invalid game data")
 )

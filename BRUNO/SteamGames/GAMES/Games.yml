@@ -1,0 +1,39 @@
+info:
+  name: Games
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/games"
+  params:
+    - name: limit
+      value: "10"
+    - name: skip
+      value: "0"
+    - name: ordering
+      value: title
+    - name: title
+      value: ""
+    - name: release_year
+      value: ""
+    - name: platforms
+      value: ""
+    - name: genre
+      value: ""
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("HTTP 200", () => {
+          expect(res.status).to.equal(200);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

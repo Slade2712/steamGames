@@ -1,0 +1,14 @@
+info:
+  name: SteamGames
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit
+  variables:
+    - name: baseUrl
+      value: http://localhost:8082/api/v1
+    - name: token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdGVhbS1nYW1lcyIsInN1YiI6IjIiLCJleHAiOjE3OTM1NTg5MDQsImlhdCI6MTc5MzU1NTMwNH0.8shwYuLbFzDPzui5wv-n6-imjFpc3fLlLX9rL_N39l4
+    - name: gameId
+      value: "2002451"

@@ -121,6 +121,9 @@ func main() {
 
 	// GET GAME BY ID
 	router.HandleFunc("GET "+prefix+"games/{id}", gameHand.GetGameByID)
+	router.HandleFunc("PUT "+prefix+"games/{id}", authGuard.RequireAdmin(gameHand.UpdateGame))
+	router.HandleFunc("POST "+prefix+"games", authGuard.RequireAdmin(gameHand.CreateGame))
+	router.HandleFunc("DELETE "+prefix+"games/{id}", authGuard.RequireAdmin(gameHand.DeleteGame))
 
 	// ======================
 	// SERVER
