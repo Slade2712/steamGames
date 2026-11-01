@@ -1,0 +1,101 @@
+# Steam Games — requêtes de test
+# Extension VS Code : REST Client
+# Après POST /login, copier le JWT reçu dans @token.
+# Pour PUT et DELETE, remplacer @gameId par l'identifiant du jeu à modifier.
+
+@baseUrl = http://localhost:8082/api/v1
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdGVhbS1nYW1lcyIsInN1YiI6IjQiLCJleHAiOjE3OTM1NjA1NTUsImlhdCI6MTc5MzU1Njk1NX0.HwHt15W45Q6H6fb6zb0UISoLItesV-cWey-Hnj2jE3Y
+@gameId = 10
+
+### Santé de l'API
+GET {{baseUrl}}/health
+
+### Inscription (à effectuer une seule fois par email)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "patriqueRodriguez@gamil.com",
+  "password": "motdepasse123"
+}
+
+### Connexion : récupérer le JWT dans la réponse
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "patriqueRodriguez@gamil.com",
+  "password": "motdepasse123"
+}
+
+### Mon profil (JWT requis)
+GET {{baseUrl}}/users/me
+Authorization: Bearer {{token}}
+
+### Tous les utilisateurs (ADMIN requis)
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### Liste des jeux : pagination et tri
+GET {{baseUrl}}/games?limit=10&skip=0&ordering=title
+
+### Liste des jeux : exemple de recherche
+GET {{baseUrl}}/games?limit=10&skip=0&title=Counter-Strike
+
+### Jeu par identifiant
+GET {{baseUrl}}/games/{{gameId}}
+
+### Créer un jeu (ADMIN requis)
+POST {{baseUrl}}/games
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Snaptrack",
+  "required_age": "17+",
+  "is_free": false,
+  "description": "Jeu de voiture fun entre amis",
+  "price": 999.99,
+  "developers": ["SnapInc"],
+  "publishers": ["SnapInc"],
+  "platforms": ["Windows", "Linux"],
+  "genres": [
+    { "id": 9, "description": "Racing" },
+    { "id": 28, "description": "Simulation" },
+    { "id": 1, "description": "Action" }
+  ],
+  "categories": [
+    { "id": 1, "description": "Multi-player" },
+    { "id": 47, "description": "LAN PvP" }
+  ]
+}
+
+### Remplacer un jeu existant (ADMIN requis)
+PUT {{baseUrl}}/games/{{gameId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Snaptrack",
+  "required_age": "12",
+  "is_free": false,
+  "description": "Jeu de voiture fun entre amis",
+  "price": 999.99,
+  "developers": ["SnapInc"],
+  "publishers": ["SnapInc"],
+  "platforms": ["Windows", "Linux"],
+  "genres": [
+    { "id": 9, "description": "Racing" },
+    { "id": 28, "description": "Simulation" },
+    { "id": 1, "description": "Action" }
+  ],
+  "categories": [
+    { "id": 1, "description": "Multi-player" },
+    { "id": 47, "description": "LAN PvP" }
+  ]
+}
+
+### Supprimer un jeu (ADMIN requis) — ATTENTION : suppression définitive
+DELETE {{baseUrl}}/games/{{gameId}}
+Authorization: Bearer {{token}}
