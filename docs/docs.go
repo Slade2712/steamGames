@@ -15,6 +15,112 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "Authentifie un utilisateur à partir de son adresse e-mail et de son mot de passe.\nEn cas de succès, retourne un token JWT de type Bearer ainsi que sa durée de validité.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Se connecter",
+                "operationId": "login-user",
+                "parameters": [
+                    {
+                        "description": "Identifiants de connexion",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Authentification réussie",
+                        "schema": {
+                            "$ref": "#/definitions/users.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Corps JSON invalide",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Adresse e-mail ou mot de passe incorrect",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne lors de l'authentification",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Crée un nouveau compte utilisateur à partir d'une adresse e-mail et d'un mot de passe.\nLe mot de passe doit contenir entre 10 et 72 caractères.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Créer un compte utilisateur",
+                "operationId": "register-user",
+                "parameters": [
+                    {
+                        "description": "Informations nécessaires à la création du compte",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Compte créé avec succès",
+                        "schema": {
+                            "$ref": "#/definitions/users.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "JSON invalide, adresse e-mail invalide ou mot de passe invalide",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Adresse e-mail déjà utilisée",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne lors de la création du compte",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/games": {
             "get": {
                 "description": "Retourne une liste paginée de jeux Steam.\nLes résultats peuvent être filtrés par titre, année de sortie, plateforme et genre.\nLe tri est effectué sur le titre du jeu.\nSi limit est supérieur à 100, sa valeur est automatiquement limitée à 100.",
@@ -177,6 +283,79 @@ const docTemplate = `{
                         "description": "Base de données indisponible",
                         "schema": {
                             "$ref": "#/definitions/handler.HealthCheckUnavailable"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retourne la liste de tous les utilisateurs enregistrés dans l'application.\nLe token doit être envoyé sous la forme : Bearer \u003ctoken\u003e.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Lister les utilisateurs",
+                "operationId": "get-all-users",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/users.UserResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token absent, invalide ou expiré",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne lors de la récupération des utilisateurs",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retourne les informations de l'utilisateur correspondant au token JWT envoyé dans l'en-tête Authorization.\nLe token doit être envoyé sous la forme : Bearer \u003ctoken\u003e.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Récupérer mon profil",
+                "operationId": "get-current-user",
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur authentifié",
+                        "schema": {
+                            "$ref": "#/definitions/users.UserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token absent, invalide ou expiré",
+                        "schema": {
+                            "$ref": "#/definitions/responses.GenericResponse"
                         }
                     }
                 }
@@ -352,8 +531,86 @@ const docTemplate = `{
                     "example": false
                 }
             }
+        },
+        "users.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "users.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "expires_in": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "users.RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "users.UserResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
         }
-    }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "tags": [
+        {
+            "description": "Vérification de l'état de santé de l'API.",
+            "name": "Health"
+        },
+        {
+            "description": "Inscription et authentification des utilisateurs.",
+            "name": "Auth"
+        },
+        {
+            "description": "Gestion des comptes utilisateurs.",
+            "name": "Users"
+        },
+        {
+            "description": "Consultation, recherche, filtrage et pagination des jeux Steam.",
+            "name": "Games"
+        }
+    ]
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
@@ -363,7 +620,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Steam Games API",
-	Description:      "API REST pour consulter les jeux Steam.",
+	Description:      "API REST permettant de consulter les jeux Steam et de gérer les utilisateurs.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

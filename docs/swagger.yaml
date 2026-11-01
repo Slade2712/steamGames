@@ -112,12 +112,120 @@ definitions:
         example: false
         type: boolean
     type: object
+  users.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  users.LoginResponse:
+    properties:
+      expires_in:
+        type: integer
+      token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  users.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  users.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+    type: object
 info:
   contact: {}
-  description: API REST pour consulter les jeux Steam.
+  description: API REST permettant de consulter les jeux Steam et de gérer les utilisateurs.
   title: Steam Games API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Authentifie un utilisateur à partir de son adresse e-mail et de son mot de passe.
+        En cas de succès, retourne un token JWT de type Bearer ainsi que sa durée de validité.
+      operationId: login-user
+      parameters:
+      - description: Identifiants de connexion
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authentification réussie
+          schema:
+            $ref: '#/definitions/users.LoginResponse'
+        "400":
+          description: Corps JSON invalide
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+        "401":
+          description: Adresse e-mail ou mot de passe incorrect
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+        "500":
+          description: Erreur interne lors de l'authentification
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+      summary: Se connecter
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Crée un nouveau compte utilisateur à partir d'une adresse e-mail et d'un mot de passe.
+        Le mot de passe doit contenir entre 10 et 72 caractères.
+      operationId: register-user
+      parameters:
+      - description: Informations nécessaires à la création du compte
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Compte créé avec succès
+          schema:
+            $ref: '#/definitions/users.UserResponse'
+        "400":
+          description: JSON invalide, adresse e-mail invalide ou mot de passe invalide
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+        "409":
+          description: Adresse e-mail déjà utilisée
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+        "500":
+          description: Erreur interne lors de la création du compte
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+      summary: Créer un compte utilisateur
+      tags:
+      - Auth
   /games:
     get:
       description: |-
@@ -241,4 +349,68 @@ paths:
       summary: Vérifier l'état de santé de l'API
       tags:
       - Health
+  /users:
+    get:
+      description: |-
+        Retourne la liste de tous les utilisateurs enregistrés dans l'application.
+        Le token doit être envoyé sous la forme : Bearer <token>.
+      operationId: get-all-users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des utilisateurs
+          schema:
+            items:
+              $ref: '#/definitions/users.UserResponse'
+            type: array
+        "401":
+          description: Token absent, invalide ou expiré
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+        "500":
+          description: Erreur interne lors de la récupération des utilisateurs
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+      security:
+      - BearerAuth: []
+      summary: Lister les utilisateurs
+      tags:
+      - Users
+  /users/me:
+    get:
+      description: |-
+        Retourne les informations de l'utilisateur correspondant au token JWT envoyé dans l'en-tête Authorization.
+        Le token doit être envoyé sous la forme : Bearer <token>.
+      operationId: get-current-user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Utilisateur authentifié
+          schema:
+            $ref: '#/definitions/users.UserResponse'
+        "401":
+          description: Token absent, invalide ou expiré
+          schema:
+            $ref: '#/definitions/responses.GenericResponse'
+      security:
+      - BearerAuth: []
+      summary: Récupérer mon profil
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
+tags:
+- description: Vérification de l'état de santé de l'API.
+  name: Health
+- description: Inscription et authentification des utilisateurs.
+  name: Auth
+- description: Gestion des comptes utilisateurs.
+  name: Users
+- description: Consultation, recherche, filtrage et pagination des jeux Steam.
+  name: Games

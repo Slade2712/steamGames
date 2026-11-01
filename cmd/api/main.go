@@ -14,9 +14,6 @@ import (
 	gameHandler "steam_games/internal/handler/games"
 	userHandler "steam_games/internal/handler/users"
 	authMiddleware "steam_games/internal/middleware/auth"
-	gameRepository "steam_games/internal/repositories/games"
-	gameService "steam_games/internal/services/games"
-
 	middlewareCors "steam_games/internal/middleware/cors"
 	middlewareLogs "steam_games/internal/middleware/logs"
 	gameRepository "steam_games/internal/repositories/games"
@@ -27,11 +24,21 @@ import (
 
 // @title Steam Games API
 // @version 1.0
-// @description API REST pour consulter les jeux Steam.
+// @description API REST permettant de consulter les jeux Steam et de gérer les utilisateurs.
 // @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 
 // @tag.name Health
 // @tag.description Vérification de l'état de santé de l'API.
+
+// @tag.name Auth
+// @tag.description Inscription et authentification des utilisateurs.
+
+// @tag.name Users
+// @tag.description Gestion des comptes utilisateurs.
 
 // @tag.name Games
 // @tag.description Consultation, recherche, filtrage et pagination des jeux Steam.

@@ -11,11 +11,12 @@ import (
 	"time"
 	"unicode/utf8"
 
+	userModel "steam_games/internal/models/users"
+	userRepository "steam_games/internal/repositories/users"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
-	userModel "steam_games/internal/models/users"
-	userRepository "steam_games/internal/repositories/users"
 )
 
 var ErrInvalidInput = errors.New("email ou mot de passe invalide")
