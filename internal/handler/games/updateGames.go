@@ -12,6 +12,31 @@ import (
 	"steam_games/internal/utils"
 )
 
+// UpdateGame modifie un jeu existant.
+//
+// @Summary Modifier un jeu
+// @Description Remplace les informations d'un jeu existant à partir de son identifiant.
+// @Description Le champ title est obligatoire.
+// @Description Si _id est fourni dans le corps, il doit être identique à l'identifiant présent dans l'URL.
+// @Description Les associations développeurs, éditeurs, plateformes, catégories et genres sont remplacées par celles fournies.
+// @Description Un seul objet JSON est accepté dans le corps de la requête.
+// @Description Cette route est réservée aux administrateurs.
+// @ID update-game
+// @Tags Games
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+//
+// @Param id path int true "Identifiant du jeu" example(570)
+// @Param game body models.Game true "Nouvelles informations du jeu"
+//
+// @Success 200 {object} models.Game "Jeu modifié avec succès"
+// @Failure 400 {object} responses.GenericResponse "ID invalide, JSON invalide, plusieurs objets fournis, title manquant ou ID du corps différent de l'URL"
+// @Failure 401 {object} responses.GenericResponse "Token Bearer manquant, invalide ou expiré"
+// @Failure 403 {object} responses.GenericResponse "Accès réservé aux administrateurs"
+// @Failure 404 {object} responses.GenericResponse "Jeu introuvable"
+// @Failure 500 {object} responses.GenericResponse "Erreur interne lors de la modification du jeu"
+// @Router /games/{id} [put]
 func (h *Handler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil || id <= 0 {
