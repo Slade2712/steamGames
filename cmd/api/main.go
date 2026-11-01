@@ -8,9 +8,13 @@ import (
 	"steam_games/internal/handler"
 
 	gameHandler "steam_games/internal/handler/games"
-	gameRepository "steam_games/internal/repositories/games"
-	gameService "steam_games/internal/services/games"
+	userHandler "steam_games/internal/handler/users"
+	authMiddleware "steam_games/internal/middleware/auth"
 	middlewareLogs "steam_games/internal/middleware/logs"
+	gameRepository "steam_games/internal/repositories/games"
+	userRepository "steam_games/internal/repositories/users"
+	authService "steam_games/internal/services/auth"
+	gameService "steam_games/internal/services/games"
 )
 
 func main() {
@@ -35,16 +39,30 @@ func main() {
 	// REPOSITORIES
 	// ======================
 	gameRepo := gameRepository.New(db)
+	userRepo := userRepository.New(db)
 
 	// ======================
 	// SERVICES
 	// ======================
 	gameServ := gameService.New(gameRepo)
+	jwtSecret := os.Getenv("JWT_SECRET")
+	authServ, err := authService.New(userRepo, jwtSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// ======================
 	// HANDLERS
 	// ======================
 	gameHand := gameHandler.New(gameServ)
+	userHand := userHandler.New(authServ)
+	authGuard := authMiddleware.New(authServ)
+
+	// AUTHENTIFICATION
+	router.HandleFunc("POST "+prefix+"register", userHand.Register)
+	router.HandleFunc("POST "+prefix+"login", userHand.Login)
+	router.HandleFunc("GET "+prefix+"users/me", authGuard.RequireLogin(userHand.Me))
+	router.HandleFunc("GET "+prefix+"users", authGuard.RequireAdmin(userHand.GetAll))
 
 	// HEALTH
 	router.HandleFunc("GET "+prefix+"health", handler.Health)

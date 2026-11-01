@@ -19,6 +19,7 @@ services:
             PORT: 8080
             API_PORT: ${API_PORT}
             API_PREFIX: ${API_PREFIX}
+            JWT_SECRET: ${JWT_SECRET:?Definir JWT_SECRET dans .env}
             DB_HOST: ${DB_HOST}
             DB_PORT: ${DB_PORT}
             DB_NAME: ${POSTGRES_DB}
