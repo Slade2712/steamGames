@@ -12,9 +12,11 @@ import (
 	_ "steam_games/docs"
 
 	gameHandler "steam_games/internal/handler/games"
-	middlewareLogs "steam_games/internal/middleware/logs"
 	gameRepository "steam_games/internal/repositories/games"
 	gameService "steam_games/internal/services/games"
+
+	middlewareCors "steam_games/internal/middleware/cors"
+	middlewareLogs "steam_games/internal/middleware/logs"
 )
 
 // @title Steam Games API
@@ -87,13 +89,21 @@ func main() {
 	// GET GAME BY ID
 	router.HandleFunc("GET "+prefix+"games/{id}", gameHand.GetGameByID)
 
+	// ======================
+	// MIDDLEWARES
+	// ======================
+	corsHandler := middlewareCors.Middleware(router)
+	loggedHandler := middlewareLogs.Logger(corsHandler)
+
+	// ======================
 	// SERVER
+	// ======================
 	internalPort := os.Getenv("PORT")
 	externalPort := os.Getenv("API_PORT")
 
 	log.Printf("API démarrée sur http://localhost:%s", externalPort)
 
-	serveError := http.ListenAndServe(":"+internalPort, middlewareLogs.Logger(router))
+	serveError := http.ListenAndServe(":"+internalPort, loggedHandler)
 	if serveError != nil {
 		log.Fatal(serveError)
 	}

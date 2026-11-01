@@ -1,8 +1,10 @@
 package games
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	gameErrors "steam_games/internal/errors/games"
 	models "steam_games/internal/models/games"
@@ -54,8 +56,8 @@ func (h *Handler) GetGames(response http.ResponseWriter,
 	releaseYear := 0
 
 	if params.Get("limit") != "" {
-		value, error := strconv.Atoi(params.Get("limit"))
-		if error != nil {
+		value, convertError := strconv.Atoi(params.Get("limit"))
+		if convertError != nil || value <= 0 {
 			utils.SendJSONResponse(
 				response,
 				http.StatusBadRequest,
@@ -75,9 +77,8 @@ func (h *Handler) GetGames(response http.ResponseWriter,
 	}
 
 	if params.Get("skip") != "" {
-		value, error := strconv.Atoi(params.Get("skip"))
-
-		if error != nil {
+		value, convertError := strconv.Atoi(params.Get("skip"))
+		if convertError != nil || value < 0 {
 			utils.SendJSONResponse(
 				response,
 				http.StatusBadRequest,
@@ -93,11 +94,8 @@ func (h *Handler) GetGames(response http.ResponseWriter,
 	}
 
 	if params.Get("release_year") != "" {
-		value, error := strconv.Atoi(
-			params.Get("release_year"),
-		)
-
-		if error != nil {
+		value, convertError := strconv.Atoi(params.Get("release_year"))
+		if convertError != nil || value <= 0 {
 			utils.SendJSONResponse(
 				response,
 				http.StatusBadRequest,
@@ -130,6 +128,25 @@ func (h *Handler) GetGames(response http.ResponseWriter,
 		return
 	}
 
+	genre := params.Get("genre")
+	if genre != "" {
+		genreValues := strings.Split(genre, ",")
+		for _, genreValue := range genreValues {
+			genreID, convertError := strconv.Atoi(genreValue)
+			if convertError != nil || genreID <= 0 {
+				utils.SendJSONResponse(
+					response,
+					http.StatusBadRequest,
+					responseModel.GenericResponse{
+						Success: false,
+						Message: gameErrors.ErrInvalidGenre.Error(),
+					},
+				)
+				return
+			}
+		}
+	}
+
 	games, totalItems, getError := h.service.GetGames(
 		request.Context(),
 		limit,
@@ -138,7 +155,7 @@ func (h *Handler) GetGames(response http.ResponseWriter,
 		params.Get("title"),
 		releaseYear,
 		params.Get("platforms"),
-		params.Get("genre"),
+		genre,
 	)
 
 	if getError != nil {
@@ -147,7 +164,7 @@ func (h *Handler) GetGames(response http.ResponseWriter,
 			http.StatusInternalServerError,
 			responseModel.GenericResponse{
 				Success: false,
-				Message: getError.Error(),
+				Message: "Internal server error",
 			},
 		)
 		return
@@ -208,11 +225,10 @@ func (h *Handler) GetGameByID(
 	idString := request.PathValue("id")
 	id, convertError := strconv.Atoi(idString)
 
-	if convertError != nil {
+	if convertError != nil || id <= 0 {
 		utils.SendJSONResponse(
 			response,
 			http.StatusBadRequest,
-
 			responseModel.GenericResponse{
 				Success: false,
 				Message: gameErrors.ErrInvalidGameID.Error(),
@@ -221,18 +237,38 @@ func (h *Handler) GetGameByID(
 		return
 	}
 
-	game, getError := h.service.GetGameByID(
-		request.Context(),
-		id,
-	)
-
+	game, getError := h.service.GetGameByID(request.Context(), id)
 	if getError != nil {
+		if errors.Is(getError, gameErrors.ErrGameNotFound) {
+			utils.SendJSONResponse(
+				response,
+				http.StatusNotFound,
+				responseModel.GenericResponse{
+					Success: false,
+					Message: gameErrors.ErrGameNotFound.Error(),
+				},
+			)
+			return
+		}
+
+		if errors.Is(getError, gameErrors.ErrInvalidGameID) {
+			utils.SendJSONResponse(
+				response,
+				http.StatusBadRequest,
+				responseModel.GenericResponse{
+					Success: false,
+					Message: gameErrors.ErrInvalidGameID.Error(),
+				},
+			)
+			return
+		}
+
 		utils.SendJSONResponse(
 			response,
 			http.StatusInternalServerError,
 			responseModel.GenericResponse{
 				Success: false,
-				Message: getError.Error(),
+				Message: "Internal server error",
 			},
 		)
 		return

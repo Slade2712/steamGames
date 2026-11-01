@@ -25,6 +25,7 @@ services:
             DB_USER: ${POSTGRES_USER}
             DB_PASSWORD: ${POSTGRES_PASSWORD}
             DB_SSLMODE: ${DB_SSLMODE}
+            CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
 
         networks:
             - backend
